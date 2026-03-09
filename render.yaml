@@ -1,5 +1,4 @@
 databases:
-databases:
   - name: attendly-db
     databaseName: attendly
     user: attendly
