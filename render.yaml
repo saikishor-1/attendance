@@ -8,7 +8,7 @@ services:
   - type: web
     name: attendly-backend
     env: python
-    buildCommand: "./backend/build.sh"
+    buildCommand: "cd backend && pip install -r requirements.txt"
     startCommand: "cd backend && gunicorn attendance_project.wsgi:application"
     envVars:
       - key: DATABASE_URL
