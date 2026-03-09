@@ -1,4 +1,5 @@
 databases:
+databases:
   - name: attendly-db
     databaseName: attendly
     user: attendly
@@ -8,8 +9,9 @@ services:
   - type: web
     name: attendly-backend
     env: python
-    buildCommand: "cd backend && pip install -r requirements.txt"
-    startCommand: "cd backend && gunicorn attendance_project.wsgi:application"
+    rootDir: backend
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn attendance_project.wsgi:application"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
