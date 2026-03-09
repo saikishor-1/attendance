@@ -26,7 +26,7 @@ import os
 import dj_database_url
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('RENDER') is None
+DEBUG = True
 
 ALLOWED_HOSTS = ['*'] # In production, set this to your exact render URL, e.g., 'your-render-app.onrender.com'
 
