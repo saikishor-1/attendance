@@ -1,9 +1,12 @@
 from django.contrib import admin
-from django.urls import path, include, re_path
-from django.views.generic import TemplateView
+from django.urls import path, include
+from django.http import JsonResponse
+
+def api_root(request):
+    return JsonResponse({"status": "success", "message": "Attendly API is running securely on Render!"})
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('attendance_app.urls')),
-    re_path(r'^.*$', TemplateView.as_view(template_name='index.html')),
+    path('', api_root),
 ]
