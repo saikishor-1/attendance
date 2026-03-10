@@ -11,11 +11,16 @@ def api_root(request):
     try:
         from django.db import connection
         with connection.cursor() as cursor:
-            cursor.execute("SELECT 1")
-            row = cursor.fetchone()
+            cursor.execute("""
+                SELECT indexname, indexdef 
+                FROM pg_indexes 
+                WHERE tablename = 'attendance_app_student'
+            """)
+            indexes = cursor.fetchall()
         db_ok = True
     except Exception as e:
         db_ok = str(e)
+        indexes = []
     
     frontend_dist = str(BASE_DIR.parent / 'frontend' / 'dist')
     dist_exists = os.path.exists(frontend_dist)
@@ -23,6 +28,7 @@ def api_root(request):
     return JsonResponse({
         "status": "success",
         "db_ok": db_ok,
+        "indexes": indexes,
         "dist_exists": dist_exists,
         "dist_files": dist_files,
         "DEBUG": settings.DEBUG,
