@@ -8,9 +8,8 @@ services:
   - type: web
     name: attendly-backend
     env: python
-    rootDir: backend
-    buildCommand: "./build.sh"
-    startCommand: "gunicorn attendance_project.wsgi:application"
+    buildCommand: "cd backend && ./build.sh"
+    startCommand: "cd backend && gunicorn attendance_project.wsgi:application"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
