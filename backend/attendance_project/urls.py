@@ -7,6 +7,7 @@ import os
 from django.conf import settings
 from attendance_project.settings import BASE_DIR
 
+# Force redeploy: 2026-03-10 21:32
 def api_root(request):
     try:
         from django.db import connection
