@@ -210,6 +210,45 @@ class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
 
+    @action(detail=False, methods=['get', 'post'])
+    def drop_unique_index(self, request):
+        """Temporary admin endpoint to list and drop unique constraints on register_number."""
+        with connection.cursor() as cursor:
+            # List all unique indexes/constraints on the student table
+            cursor.execute("""
+                SELECT indexname, indexdef 
+                FROM pg_indexes 
+                WHERE tablename = 'attendance_app_student' AND indexdef LIKE '%UNIQUE%'
+            """)
+            indexes = [{"name": row[0], "def": row[1]} for row in cursor.fetchall()]
+            
+            cursor.execute("""
+                SELECT conname, contype
+                FROM pg_constraint
+                WHERE conrelid = 'attendance_app_student'::regclass
+            """)
+            constraints = [{"name": row[0], "type": row[1]} for row in cursor.fetchall()]
+
+            if request.method == 'POST':
+                dropped = []
+                for idx in indexes:
+                    name = idx['name']
+                    # Only drop if it's a single-column index on register_number (not the composite unique_together one)
+                    if 'register_number' in idx['def'] and 'course' not in idx['def']:
+                        try:
+                            cursor.execute(f'DROP INDEX IF EXISTS "{name}" CASCADE')
+                            dropped.append(name)
+                        except Exception as e:
+                            dropped.append(f"FAILED {name}: {e}")
+                
+                return Response({
+                    'dropped': dropped,
+                    'remaining_indexes': indexes,
+                    'constraints': constraints
+                })
+            
+            return Response({'indexes': indexes, 'constraints': constraints})
+
     @action(detail=False, methods=['post'])
     def bulk_upload(self, request):
         # Implementation for bulk upload from Excel/CSV could go here
