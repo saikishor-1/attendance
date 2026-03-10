@@ -12,16 +12,13 @@ def api_root(request):
     try:
         from django.db import connection
         with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT indexname, indexdef 
-                FROM pg_indexes 
-                WHERE tablename = 'attendance_app_student'
-            """)
-            indexes = cursor.fetchall()
+            cursor.execute("SELECT name FROM django_migrations WHERE app = 'attendance_app'")
+            applied_migrations = [row[0] for row in cursor.fetchall()]
         db_ok = True
     except Exception as e:
         db_ok = str(e)
         indexes = []
+        applied_migrations = []
     
     frontend_dist = str(BASE_DIR.parent / 'frontend' / 'dist')
     dist_exists = os.path.exists(frontend_dist)
