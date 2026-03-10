@@ -44,5 +44,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('attendance_app.urls')),
     path('api_root/', api_root),
+    path('api_root_v2/', lambda r: JsonResponse({"version": "v2", "msg": "If you see this, code is updated"})),
     re_path(r'^.*$', TemplateView.as_view(template_name='index.html')),
 ]
