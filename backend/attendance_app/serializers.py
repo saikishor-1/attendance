@@ -7,13 +7,16 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class StudentSerializer(serializers.ModelSerializer):
+    # CRITICAL: Explicitly declare register_number with no validators.
+    # DRF auto-generates a UniqueValidator for this field when it detects
+    # a single-column DB UNIQUE index. This overrides that auto-generation
+    # so that the same student can enroll in multiple courses.
+    register_number = serializers.CharField(max_length=20, validators=[])
+
     class Meta:
         model = Student
         fields = '__all__'
-        # Remove any auto-generated per-field unique validator on register_number.
-        # Uniqueness should only be enforced as (register_number, course) pair.
-        # DRF may auto-generate a UniqueValidator for register_number from a
-        # stale model state; we override validators to prevent that.
+        # Only enforce uniqueness as a (register_number, course) pair.
         validators = [
             serializers.UniqueTogetherValidator(
                 queryset=Student.objects.all(),
@@ -21,6 +24,7 @@ class StudentSerializer(serializers.ModelSerializer):
                 message='This student is already enrolled in this course.'
             )
         ]
+
 
 class AttendanceRecordSerializer(serializers.ModelSerializer):
     student_name = serializers.ReadOnlyField(source='student.name')
