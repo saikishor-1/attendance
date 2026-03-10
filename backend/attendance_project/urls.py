@@ -9,20 +9,33 @@ from attendance_project.settings import BASE_DIR
 
 # Force redeploy: 2026-03-10 21:32
 def api_root(request):
+    indexes = []
+    applied_migrations = []
+    db_ok = False
+    
     try:
         from django.db import connection
         with connection.cursor() as cursor:
+            # Get indexes
+            cursor.execute("""
+                SELECT indexname, indexdef 
+                FROM pg_indexes 
+                WHERE tablename = 'attendance_app_student'
+            """)
+            indexes = cursor.fetchall()
+            
+            # Get migrations
             cursor.execute("SELECT name FROM django_migrations WHERE app = 'attendance_app'")
             applied_migrations = [row[0] for row in cursor.fetchall()]
+            
         db_ok = True
     except Exception as e:
         db_ok = str(e)
-        indexes = []
-        applied_migrations = []
-    
+
     frontend_dist = str(BASE_DIR.parent / 'frontend' / 'dist')
     dist_exists = os.path.exists(frontend_dist)
     dist_files = os.listdir(frontend_dist) if dist_exists else []
+    
     # Ultimate truth: read our own file content
     try:
         with open(__file__, 'r') as f:
@@ -38,7 +51,7 @@ def api_root(request):
         "dist_exists": dist_exists,
         "dist_files": dist_files,
         "DEBUG": settings.DEBUG,
-        "code_snippet": code_content[-200:]
+        "code_snippet": code_content[-300:]
     })
 
 urlpatterns = [
