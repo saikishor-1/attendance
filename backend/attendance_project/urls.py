@@ -7,8 +7,8 @@ from django.db import connection
 def api_diag(request):
     try:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT indexname, indexdef FROM pg_indexes WHERE tablename = 'attendance_app_student'")
-            indexes = [{"name": row[0], "def": row[1]} for row in cursor.fetchall()]
+            cursor.execute("SELECT tablename, indexname, indexdef FROM pg_indexes WHERE schemaname = 'public'")
+            indexes = [{"table": row[0], "name": row[1], "def": row[2]} for row in cursor.fetchall()]
             
             cursor.execute("SELECT name FROM django_migrations WHERE app = 'attendance_app'")
             migrations = [row[0] for row in cursor.fetchall()]
