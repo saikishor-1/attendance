@@ -47,6 +47,48 @@ def api_diag(request):
     except Exception as e:
         return JsonResponse({"status": "error", "msg": str(e)})
 
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def drop_unique_index(request):
+    """List and drop single-column unique indexes on register_number."""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT indexname, indexdef
+                FROM pg_indexes
+                WHERE tablename = 'attendance_app_student'
+            """)
+            indexes = [{"name": row[0], "def": row[1]} for row in cursor.fetchall()]
+
+            cursor.execute("""
+                SELECT conname, contype
+                FROM pg_constraint
+                WHERE conrelid = 'attendance_app_student'::regclass
+            """)
+            constraints = [{"name": row[0], "type": row[1]} for row in cursor.fetchall()]
+
+            if request.method == 'POST':
+                dropped = []
+                for idx in indexes:
+                    name = idx['name']
+                    defn = idx['def']
+                    if 'UNIQUE' in defn and 'register_number' in defn and 'course' not in defn:
+                        try:
+                            cursor.execute(f'DROP INDEX IF EXISTS "{name}" CASCADE')
+                            dropped.append(f"Dropped: {name}")
+                        except Exception as e:
+                            dropped.append(f"FAILED {name}: {str(e)}")
+
+                return JsonResponse({
+                    "dropped": dropped,
+                    "indexes": indexes,
+                    "constraints": constraints
+                })
+
+            return JsonResponse({"indexes": indexes, "constraints": constraints})
+    except Exception as e:
+        return JsonResponse({"status": "error", "msg": str(e)})
+
 from .models import Course, Student, AttendanceRecord
 from .serializers import CourseSerializer, StudentSerializer, AttendanceRecordSerializer
 from django.utils import timezone
