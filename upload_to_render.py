@@ -105,6 +105,9 @@ def main():
     lines = [l for l in students_raw.split('\n') if l.strip()]
     
     for c_id in course_ids:
+        if c_id == 7:
+            print(f"Skipping course ID 7 (already populated)...")
+            continue
         print(f"\nUploading students for course ID {c_id}...")
         success_count = 0
         for line in lines:

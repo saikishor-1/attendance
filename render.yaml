@@ -1,15 +1,10 @@
-databases:
-  - name: attendly-db
-    databaseName: attendly
-    user: attendly
-    plan: free
-
 services:
   - type: web
     name: attendly-backend
     env: python
-    buildCommand: "cd backend && ./build.sh"
-    startCommand: "cd backend && gunicorn attendance_project.wsgi:application"
+    rootDir: backend
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --no-input"
+    startCommand: "python manage.py migrate --no-input && gunicorn attendance_project.wsgi:application"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
