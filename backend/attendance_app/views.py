@@ -148,7 +148,7 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             course=course, date=date, status='Absent'
         ).select_related('student')
         
-        absent_list = [f"{r.student.register_number} - {r.student.name}" for r in absent_records]
+        absent_list = [f"{r.student.roll_id} - {r.student.name}" for r in absent_records]
         
         message = f"*Attendance Report*\n"
         message += f"Course: {course.course_code} | {course.course_name}\n"

@@ -114,7 +114,7 @@ def main():
                 name = parts[2].strip()
                 
                 student_data = {
-                    "register_number": reg_no,
+                    "roll_id": reg_no,
                     "name": name,
                     "course": c_id,
                     "section": "A"
@@ -122,11 +122,8 @@ def main():
                 res = requests.post(f"{API_BASE}/students/", json=student_data)
                 if res.status_code == 201:
                     success_count += 1
-                elif res.status_code == 400 and "already exists" in res.text:
-                    # If student exists but not in this course, we might need a different logic 
-                    # but our model has course as a foreign key on student, meaning 1 student = 1 course?
-                    # Let's check models.py
-                    pass
+                else:
+                    print(f"Failed to create student {reg_no} for course {c_id}: {res.text}")
         print(f"Successfully uploaded {success_count} students to course ID {c_id}!")
 
 if __name__ == "__main__":

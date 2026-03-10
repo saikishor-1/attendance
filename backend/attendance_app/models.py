@@ -10,7 +10,7 @@ class Course(models.Model):
         return f"{self.course_code} - {self.course_name}"
 
 class Student(models.Model):
-    register_number = models.CharField(max_length=20)
+    roll_id = models.CharField(max_length=20)
     name = models.CharField(max_length=100)
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='students')
     email = models.EmailField(null=True, blank=True)
@@ -24,10 +24,10 @@ class Student(models.Model):
     address = models.TextField(null=True, blank=True)
 
     class Meta:
-        unique_together = ('register_number', 'course')
+        unique_together = ('roll_id', 'course')
 
     def __str__(self):
-        return f"{self.register_number} - {self.name}"
+        return f"{self.roll_id} - {self.name}"
 
 class AttendanceRecord(models.Model):
     STATUS_CHOICES = [
