@@ -1,6 +1,52 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from django.http import JsonResponse
+from django.db import connection
+from django.conf import settings
+import os
+import datetime
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def api_diag(request):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT tablename, indexname, indexdef FROM pg_indexes WHERE schemaname = 'public'")
+            indexes = [{"table": row[0], "name": row[1], "def": row[2]} for row in cursor.fetchall()]
+            
+            cursor.execute("SELECT name FROM django_migrations WHERE app = 'attendance_app'")
+            migrations = [row[0] for row in cursor.fetchall()]
+            
+        # Check build file
+        build_info = "N/A"
+        try:
+            paths_to_check = [
+                os.path.join(settings.BASE_DIR, 'build_check.txt'),
+                os.path.join(settings.BASE_DIR, '..', 'build_check.txt'),
+                '/opt/render/project/src/backend/build_check.txt'
+            ]
+            for p in paths_to_check:
+                if os.path.exists(p):
+                    with open(p, 'r') as f:
+                        build_info = f.read().strip()
+                        break
+            else:
+                build_info = "File not found"
+        except Exception as e:
+            build_info = f"Error: {str(e)}"
+
+        return JsonResponse({
+            "status": "success",
+            "v": "2026-03-10-2235",
+            "build_info": build_info,
+            "indexes": indexes,
+            "migrations": migrations
+        })
+    except Exception as e:
+        return JsonResponse({"status": "error", "msg": str(e)})
+
 from .models import Course, Student, AttendanceRecord
 from .serializers import CourseSerializer, StudentSerializer, AttendanceRecordSerializer
 from django.utils import timezone
