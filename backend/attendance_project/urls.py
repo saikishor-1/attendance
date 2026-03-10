@@ -34,10 +34,11 @@ def api_root(request):
         "status": "success",
         "db_ok": db_ok,
         "indexes": indexes,
+        "applied_migrations": applied_migrations,
         "dist_exists": dist_exists,
         "dist_files": dist_files,
         "DEBUG": settings.DEBUG,
-        "code_snippet": code_content[-200:] # Last 200 chars to verify
+        "code_snippet": code_content[-200:]
     })
 
 urlpatterns = [
