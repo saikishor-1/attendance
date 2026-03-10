@@ -1,10 +1,9 @@
 services:
   - type: web
-    name: attendly-api
+    name: attendly-backend
     env: python
-    rootDir: backend
-    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --no-input"
-    startCommand: "python manage.py migrate --no-input && gunicorn attendance_project.wsgi:application"
+    buildCommand: "cd backend && pip install -r requirements.txt && python manage.py collectstatic --no-input"
+    startCommand: "cd backend && python manage.py migrate --no-input && gunicorn attendance_project.wsgi:application"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
