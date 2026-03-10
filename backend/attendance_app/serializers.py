@@ -13,7 +13,7 @@ class StudentSerializer(serializers.ModelSerializer):
 
 class AttendanceRecordSerializer(serializers.ModelSerializer):
     student_name = serializers.ReadOnlyField(source='student.name')
-    roll_id = serializers.ReadOnlyField(source='student.roll_id')
+    register_number = serializers.ReadOnlyField(source='student.register_number')
     
     class Meta:
         model = AttendanceRecord

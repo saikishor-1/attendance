@@ -114,7 +114,7 @@ def main():
                 name = parts[2].strip()
                 
                 student_data = {
-                    "roll_id": reg_no,
+                "register_number": reg_no,
                     "name": name,
                     "course": c_id,
                     "section": "A"
