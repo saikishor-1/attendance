@@ -10,7 +10,7 @@ class Course(models.Model):
         return f"{self.course_code} - {self.course_name}"
 
 class Student(models.Model):
-    register_number = models.CharField(max_length=20, unique=True)
+    register_number = models.CharField(max_length=20)
     name = models.CharField(max_length=100)
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='students')
     email = models.EmailField(null=True, blank=True)
@@ -22,6 +22,9 @@ class Student(models.Model):
     guardian_phone = models.CharField(max_length=20, null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     address = models.TextField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('register_number', 'course')
 
     def __str__(self):
         return f"{self.register_number} - {self.name}"
