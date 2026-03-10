@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: attendly-backend
+    name: attendly-api
     env: python
     rootDir: backend
     buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --no-input"
