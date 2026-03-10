@@ -252,44 +252,39 @@ class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
 
-    @action(detail=False, methods=['get', 'post'])
-    def drop_unique_index(self, request):
-        """Temporary admin endpoint to list and drop unique constraints on register_number."""
-        with connection.cursor() as cursor:
-            # List all unique indexes/constraints on the student table
-            cursor.execute("""
-                SELECT indexname, indexdef 
-                FROM pg_indexes 
-                WHERE tablename = 'attendance_app_student' AND indexdef LIKE '%UNIQUE%'
-            """)
-            indexes = [{"name": row[0], "def": row[1]} for row in cursor.fetchall()]
-            
-            cursor.execute("""
-                SELECT conname, contype
-                FROM pg_constraint
-                WHERE conrelid = 'attendance_app_student'::regclass
-            """)
-            constraints = [{"name": row[0], "type": row[1]} for row in cursor.fetchall()]
-
-            if request.method == 'POST':
-                dropped = []
-                for idx in indexes:
-                    name = idx['name']
-                    # Only drop if it's a single-column index on register_number (not the composite unique_together one)
-                    if 'register_number' in idx['def'] and 'course' not in idx['def']:
-                        try:
-                            cursor.execute(f'DROP INDEX IF EXISTS "{name}" CASCADE')
-                            dropped.append(name)
-                        except Exception as e:
-                            dropped.append(f"FAILED {name}: {e}")
-                
-                return Response({
-                    'dropped': dropped,
-                    'remaining_indexes': indexes,
-                    'constraints': constraints
-                })
-            
-            return Response({'indexes': indexes, 'constraints': constraints})
+    def create(self, request, *args, **kwargs):
+        """Override create to auto-heal DB unique index on register_number."""
+        from django.db import DatabaseError, transaction
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            with transaction.atomic():
+                self.perform_create(serializer)
+        except DatabaseError as e:
+            err_msg = str(e)
+            # If the DB itself rejects due to a single-column unique constraint,
+            # find and drop it, then retry
+            if 'unique' in err_msg.lower() and 'register_number' in err_msg.lower():
+                try:
+                    with connection.cursor() as cursor:
+                        cursor.execute("""
+                            SELECT indexname FROM pg_indexes
+                            WHERE tablename = 'attendance_app_student'
+                              AND indexdef LIKE '%UNIQUE%'
+                              AND indexdef LIKE '%register_number%'
+                              AND indexdef NOT LIKE '%course%'
+                        """)
+                        for row in cursor.fetchall():
+                            cursor.execute(f'DROP INDEX IF EXISTS "{row[0]}" CASCADE')
+                    # Retry after dropping the index
+                    serializer2 = self.get_serializer(data=request.data)
+                    serializer2.is_valid(raise_exception=True)
+                    self.perform_create(serializer2)
+                    return Response(serializer2.data, status=status.HTTP_201_CREATED)
+                except Exception as retry_err:
+                    return Response({'error': str(retry_err)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': err_msg}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['post'])
     def bulk_upload(self, request):
